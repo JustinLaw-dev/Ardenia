@@ -1,6 +1,6 @@
 # Ardenia App
 
-This is a fullstack project stimulating  with a **Next.js frontend** and a **NestJS backend**.  
+This is a fullstack project for a rewarding to-do app with a **Next.js frontend** and a **NestJS backend**.  
 
 tech stack
 PostGre
