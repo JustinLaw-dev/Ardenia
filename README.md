@@ -1,38 +1,73 @@
-# Ardenia App
+# Ardenia
 
-This is a fullstack project for a rewarding to-do app with a **Next.js frontend** and a **NestJS backend**.  
+Ardenia is a fullstack gamified to-do application that rewards users for completing tasks. The project combines a Next.js frontend with a NestJS backend, utilizing PostgreSQL as the database.
 
-tech stack
-PostGre
+## Overview
+
+This project features a separated architecture with independent frontend and backend directories, allowing for flexible development and deployment. Ardenia transforms ordinary task management into an engaging experience through its reward system.
+
+## Main Features
+
+- Gamified to-do list application with reward system
+- Task management and completion tracking
+- User reward/gamification mechanics
+- Fullstack architecture with separated frontend and backend
+
+## Technology Stack
+
+- **Frontend**: Next.js (React framework)
+- **Backend**: NestJS (Node.js framework)
+- **Database**: PostgreSQL
+- **Language**: TypeScript (91.9%), JavaScript (6.0%)
+- **Package Manager**: Yarn/npm
 
 ## Project Structure
 
+```
 ardenia/
-
 ├── ardenia-frontend/ (Next.js)
-├── ardenia-backend/  (NestJS)
+├── ardenia-backend/ (NestJS)
+```
 
+## Setup Instructions
 
-## Setup
-Make sure yarn/npm installed
+### Prerequisites
 
+Make sure you have yarn or npm installed on your system.
 
-In both frontend and backend terminals (open separately)
-### Yarn command
-ardenia-frontend/
+### Installation
+
+1. Clone the repository
+2. Install dependencies for both frontend and backend (in separate terminals)
+
+**Frontend:**
+```bash
+cd ardenia-frontend
 yarn
-  
-ardenia-backend/     
-  yarn
+```
 
-### 1. Install dependencies
+**Backend:**
+```bash
+cd ardenia-backend
+yarn
+```
 
-## To Run development servers locally
+## Running Development Servers
 
-### Frontend (Next.js)
-Open ardenia-frontend in terminal
-run in terminal: "yarn dev" 
+**Frontend (Next.js):**
+```bash
+cd ardenia-frontend
+yarn dev
+```
 
-### Backend (NestJS)
-Open ardenia-backend in separate terminal
-run in terminal: "yarn start:dev" 
+**Backend (NestJS):**
+```bash
+cd ardenia-backend
+yarn start:dev
+```
+
+## Contributing
+
+Instructions for contributing to the project can be added via Discord.
+
+
