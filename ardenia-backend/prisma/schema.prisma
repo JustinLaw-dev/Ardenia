@@ -7,16 +7,261 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id          String   @id @default(uuid()) @map("id")
-  username    String?  @map("username")
-  displayName String?  @map("display_name")
-  avatarUrl   String?  @map("avatar_url")
-  bio         String?  @map("bio")
-  location    String?  @map("location")
-  website     String?  @map("website")
-  createdAt   DateTime @map("created_at")
-  updatedAt   DateTime @map("updated_at")
+// ============================================
+// USER & AUTHENTICATION MODELS
+// ============================================
 
-  @@map("users") // maps model to the actual table name
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  passwordHash String    @map("password_hash")
+  username     String?   @unique
+  displayName  String?   @map("display_name")
+  avatarUrl    String?   @map("avatar_url")
+  bio          String?
+  location     String?
+  website      String?
+
+  // ADHD Profile Settings
+  adhdSubtype          String?   @map("adhd_subtype") // "inattentive", "hyperactive", "combined"
+  rewardSensitivity    Int       @default(5) @map("reward_sensitivity") // 1-10 scale
+  preferredTaskLength  Int       @default(25) @map("preferred_task_length") // minutes
+  breakLength          Int       @default(5) @map("break_length") // minutes
+  dailyEnergyPeak      String?   @map("daily_energy_peak") // "morning", "afternoon", "evening"
+  enableHapticFeedback Boolean   @default(true) @map("enable_haptic_feedback")
+  enableSoundEffects   Boolean   @default(true) @map("enable_sound_effects")
+  enableAnimations     Boolean   @default(true) @map("enable_animations")
+  theme                String    @default("light") // "light", "dark", "auto"
+
+  // Gamification Stats
+  totalPoints          Int       @default(0) @map("total_points")
+  level                Int       @default(1)
+  currentStreak        Int       @default(0) @map("current_streak")
+  longestStreak        Int       @default(0) @map("longest_streak")
+  lastActiveDate       DateTime? @map("last_active_date")
+
+  // Privacy & Research
+  dataConsentResearch  Boolean   @default(false) @map("data_consent_research")
+  anonymousAnalytics   Boolean   @default(true) @map("anonymous_analytics")
+
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  lastLoginAt  DateTime? @map("last_login_at")
+
+  // Relations
+  tasks             Task[]
+  achievements      UserAchievement[]
+  focusSessions     FocusSession[]
+  rewards           RewardHistory[]
+  refreshTokens     RefreshToken[]
+  dailyProgress     DailyProgress[]
+  streakHistory     StreakHistory[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String   @map("user_id")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("refresh_tokens")
+}
+
+// ============================================
+// TASK MANAGEMENT MODELS
+// ============================================
+
+model Task {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  title       String
+  description String?
+
+  // Task Organization
+  category    String?  // "work", "personal", "health", "learning", etc.
+  priority    Int      @default(2) // 1 (low) to 5 (urgent)
+  tags        String[] @default([])
+
+  // ADHD Optimization Fields
+  estimatedDuration Int?     @map("estimated_duration") // minutes
+  actualDuration    Int?     @map("actual_duration") // minutes - helps learn estimation
+  energyRequired    Int      @default(3) @map("energy_required") // 1-5 scale
+  difficultyLevel   Int      @default(3) @map("difficulty_level") // 1-5 scale
+
+  // Dopamine Triggers
+  rewardPoints      Int      @default(10) @map("reward_points")
+  bonusPoints       Int      @default(0) @map("bonus_points") // for completing early/on streak
+
+  // Status & Completion
+  status       String   @default("pending") // "pending", "in_progress", "completed", "archived"
+  completedAt  DateTime? @map("completed_at")
+  dueDate      DateTime? @map("due_date")
+  startedAt    DateTime? @map("started_at")
+
+  // Gamification
+  isPartOfChallenge Boolean  @default(false) @map("is_part_of_challenge")
+  challengeId       String?  @map("challenge_id")
+
+  // Subtasks for breaking down overwhelming tasks
+  parentTaskId String? @map("parent_task_id")
+  parentTask   Task?   @relation("TaskSubtasks", fields: [parentTaskId], references: [id], onDelete: Cascade)
+  subtasks     Task[]  @relation("TaskSubtasks")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  focusSessions FocusSession[]
+
+  @@index([userId, status])
+  @@index([userId, dueDate])
+  @@map("tasks")
+}
+
+// ============================================
+// FOCUS & TIME MANAGEMENT MODELS
+// ============================================
+
+model FocusSession {
+  id               String    @id @default(uuid())
+  userId           String    @map("user_id")
+  taskId           String?   @map("task_id")
+
+  // Session Details
+  plannedDuration  Int       @map("planned_duration") // minutes
+  actualDuration   Int?      @map("actual_duration") // minutes
+  sessionType      String    @default("pomodoro") @map("session_type") // "pomodoro", "deep_work", "quick_task"
+
+  // Session Quality Metrics (ADHD-specific)
+  distractionCount Int       @default(0) @map("distraction_count")
+  focusQuality     Int?      @map("focus_quality") // 1-5 self-reported after session
+  completedGoal    Boolean   @default(false) @map("completed_goal")
+
+  // Rewards
+  pointsEarned     Int       @default(0) @map("points_earned")
+
+  startedAt        DateTime  @default(now()) @map("started_at")
+  endedAt          DateTime? @map("ended_at")
+
+  user User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  task Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  @@index([userId, startedAt])
+  @@map("focus_sessions")
+}
+
+// ============================================
+// GAMIFICATION & REWARDS MODELS
+// ============================================
+
+model Achievement {
+  id          String   @id @default(uuid())
+  key         String   @unique // "first_task", "week_warrior", "streak_10", etc.
+  name        String
+  description String
+  icon        String   // emoji or icon identifier
+  category    String   // "completion", "streak", "focus", "consistency"
+  tier        String   @default("bronze") // "bronze", "silver", "gold", "platinum"
+  pointValue  Int      @map("point_value")
+  requirement String   // JSON string describing unlock criteria
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  users UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  achievementId String   @map("achievement_id")
+
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+  seenAt        DateTime? @map("seen_at") // track if user has viewed the achievement
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@index([userId, unlockedAt])
+  @@map("user_achievements")
+}
+
+model RewardHistory {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+
+  pointsEarned Int     @map("points_earned")
+  reason      String   // "task_completed", "streak_bonus", "focus_session", "achievement_unlocked"
+  metadata    String?  // JSON with additional context
+
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("reward_history")
+}
+
+model StreakHistory {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+
+  streakCount Int     @map("streak_count")
+  startDate   DateTime @map("start_date")
+  endDate     DateTime @map("end_date")
+
+  // Forgiveness tracking (ADHD-friendly: 1 missed day doesn't break streak)
+  missedDays  Int     @default(0) @map("missed_days")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, startDate])
+  @@map("streak_history")
+}
+
+// ============================================
+// ANALYTICS & PROGRESS TRACKING
+// ============================================
+
+model DailyProgress {
+  id               String   @id @default(uuid())
+  userId           String   @map("user_id")
+  date             DateTime @unique @default(now())
+
+  // Task Metrics
+  tasksCompleted   Int      @default(0) @map("tasks_completed")
+  tasksCreated     Int      @default(0) @map("tasks_created")
+
+  // Focus Metrics
+  focusMinutes     Int      @default(0) @map("focus_minutes")
+  focusSessions    Int      @default(0) @map("focus_sessions")
+
+  // Gamification
+  pointsEarned     Int      @default(0) @map("points_earned")
+  achievementsUnlocked Int  @default(0) @map("achievements_unlocked")
+
+  // Quality Metrics
+  averageFocusQuality Float? @map("average_focus_quality")
+  averageTaskCompletion Float? @map("average_task_completion") // % of estimated time
+
+  // Energy & Mood Tracking (optional ADHD feature)
+  morningEnergy    Int?     @map("morning_energy") // 1-5 scale
+  afternoonEnergy  Int?     @map("afternoon_energy")
+  eveningEnergy    Int?     @map("evening_energy")
+
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+  @@map("daily_progress")
 }

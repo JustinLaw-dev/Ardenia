@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -13,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Ardenia',
-  description: 'Productivity, built with kindness',
+  title: 'Ardenia V1 - ADHD-Optimized Task Management',
+  description: 'Premium task management designed for ADHD minds. Neuroscience-backed rewards, focus tracking, and dopamine-optimized productivity.',
 };
 
 export default function RootLayout({
@@ -25,9 +26,11 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50 dark:bg-gray-900`}
       >
-        {children}
+        <AuthProvider>
+          {children}
+        </AuthProvider>
       </body>
     </html>
   );
