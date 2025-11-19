@@ -8,7 +8,7 @@
 
 ---
 
-## ✨ What Makes Ardenia Different
+## What Makes Ardenia Different
 
 Ardenia isn't just another task manager. It's a **neuroscience-backed productivity system** designed from the ground up for how ADHD brains actually work:
 
@@ -298,11 +298,10 @@ NEXT_PUBLIC_API_URL="https://api.yourdomain.com"
 
 ## 📄 License
 
-MIT License - see LICENSE file
-
+Private Access 
 ---
 
-**Built with ❤️ and neuroscience**
+**Built with love made with intention **
 
 *Productivity, built with kindness.*
 
