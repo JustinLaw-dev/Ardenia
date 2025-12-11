@@ -135,6 +135,14 @@ export function LoginForm() {
           </button>
         </div>
 
+        <div className="flex items-center justify-between">
+          <a
+            href="/reset-password"
+            className="text-sm text-indigo-600 hover:text-indigo-700"
+          >
+            Forgot password?
+          </a>
+        </div>
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
             By continuing, you agree to our Terms of Service and Privacy Policy

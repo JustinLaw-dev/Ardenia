@@ -1,5 +1,7 @@
 "use client";
 
+import { useAuth } from "@/contexts/AuthContext";
+
 export default function MobileDashboard({
   open,
   setOpen,
@@ -7,6 +9,8 @@ export default function MobileDashboard({
   open: boolean;
   setOpen: (v: boolean) => void;
 }) {
+  const { user } = useAuth();
+
   return (
     <>
       {/* Background overlay */}
@@ -29,12 +33,21 @@ export default function MobileDashboard({
           <a className="block hover:text-blue-500" href="/">
             Home
           </a>
-          <a className="block hover:text-blue-500" href="/tasks">
-            Tasks
-          </a>
-          <a className="block hover:text-blue-500" href="/gamify">
-            Gamify
-          </a>
+          {user && (
+            <>
+              <a className="block hover:text-blue-500" href="/tasks">
+                Tasks
+              </a>
+              <a className="block hover:text-blue-500" href="/gamify">
+                Gamify
+              </a>
+            </>
+          )}
+          {!user && (
+            <a className="block hover:text-blue-500" href="/login">
+              Login
+            </a>
+          )}
         </div>
       </div>
     </>

@@ -2,28 +2,32 @@ import { updateSession } from "@/lib/supabase/middleware";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
-  const { supabase, response } = await updateSession(request);
-
-  // Get user session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { response, user } = await updateSession(request);
 
   // Define public routes (accessible without login)
-  const publicRoutes = ["/login", "/signup", "/auth/callback"];
+  const publicRoutes = [
+    "/login",
+    "/signup",
+    "/reset-password",
+    "/auth/callback",
+    "/auth/reset-password",
+  ];
   const isPublicRoute = publicRoutes.some((route) =>
     request.nextUrl.pathname.startsWith(route)
   );
 
+  // Check if user is authenticated (user object exists and has an id)
+  const isAuthenticated = user && user.id;
+
   // Redirect to login if not authenticated and trying to access protected route
-  if (!user && !isPublicRoute) {
+  if (!isAuthenticated && !isPublicRoute) {
     const redirectUrl = new URL("/login", request.url);
     return NextResponse.redirect(redirectUrl);
   }
 
   // Redirect to dashboard if authenticated and trying to access login/signup
   if (
-    user &&
+    isAuthenticated &&
     (request.nextUrl.pathname === "/login" ||
       request.nextUrl.pathname === "/signup")
   ) {
@@ -36,6 +40,14 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
+    "/",
+    "/tasks/:path*",
+    "/gamify/:path*",
+    "/dashboard/:path*",
+    "/users/:path*",
+    "/login",
+    "/signup",
+    "/reset-password/:path*",
+    "/auth/:path*",
   ],
 };
