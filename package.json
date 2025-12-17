@@ -1,0 +1,10 @@
+{
+  "name": "project-root",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"yarn --cwd ardenia-frontend dev\" \"yarn --cwd ardenia-backend start:dev\""
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
