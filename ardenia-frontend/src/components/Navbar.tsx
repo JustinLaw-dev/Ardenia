@@ -1,14 +1,23 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import MobileDashboard from "./MobileDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
+import { getPendingRequestCount } from "@/lib/friends";
 import Link from "next/link";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [pendingCount, setPendingCount] = useState(0);
   const { user, loading } = useAuth();
   const { level, currentLevelXP, xpToNextLevel, progress } = useGame();
+
+  // Fetch pending friend request count
+  useEffect(() => {
+    if (user) {
+      getPendingRequestCount(user.id).then(setPendingCount);
+    }
+  }, [user]);
 
   // Get display name from user metadata or email
   const displayName =
@@ -28,6 +37,14 @@ export default function Navbar() {
             <div className="flex items-center h-7 gap-4">
               <Link className=" hover:text-blue-500" href="/tasks">
                 Tasks
+              </Link>
+              <Link className="relative hover:text-blue-500" href="/friends">
+                Friends
+                {pendingCount > 0 && (
+                  <span className="absolute -top-2 -right-3 px-1.5 py-0.5 text-xs bg-terracotta-500 text-white rounded-full min-w-[18px] text-center">
+                    {pendingCount}
+                  </span>
+                )}
               </Link>
               <Link className=" hover:text-blue-500" href="/gamify">
                 Ideas
