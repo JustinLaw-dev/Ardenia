@@ -22,7 +22,8 @@ const XP_PER_TASK = 50;
 
 export default function Home() {
   const { user, loading, signOut } = useAuth();
-  const { level, nextLevel, currentLevelXP, xpToNextLevel, progress, addXP } = useGame();
+  const { level, nextLevel, currentLevelXP, xpToNextLevel, progress, addXP } =
+    useGame();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [showReward, setShowReward] = useState(false);
   const [lastEarnedXP, setLastEarnedXP] = useState(0);
@@ -110,13 +111,34 @@ export default function Home() {
             <span className="text-foreground font-semibold">the fun way.</span>
           </p>
 
+          {/* Quick Start Options */}
+          <div>
+            <p className="text-sm text-muted-foreground mb-2">Quick start:</p>
+            <div className="w-full flex flex-wrap justify-center gap-2">
+              {[
+                "Drink a glass of water",
+                "Take a 5-minute walk",
+                "Tidy up my desk",
+                "Read for 10 minutes",
+                "Do 10 push-ups",
+              ].map((task) => (
+                <button
+                  key={task}
+                  onClick={() => handleTaskCreate(task)}
+                  className="px-3 py-1.5 text-sm bg-muted cursor-pointer hover:bg-muted/80 text-muted-foreground hover:text-foreground rounded-full border border-border hover:border-terracotta-300 transition-colors"
+                >
+                  + {task}
+                </button>
+              ))}
+            </div>
+          </div>
+
           {/* Quick Task Input */}
           <div className="w-full mt-4">
             {tasks.length === 0 ? (
               <div className="space-y-3">
                 <p className="text-sm text-muted-foreground">
-                  Start your journey - what&apos;s one thing you want to
-                  accomplish?
+                  Or type your own task below
                 </p>
                 <QuickTaskInput onTaskCreate={handleTaskCreate} />
                 <p className="text-xs text-muted-foreground">

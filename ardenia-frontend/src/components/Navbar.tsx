@@ -1,7 +1,6 @@
 "use client";
 import { useState } from "react";
 import MobileDashboard from "./MobileDashboard";
-import { CircleUser } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
 import Link from "next/link";
@@ -21,14 +20,25 @@ export default function Navbar() {
   return (
     <>
       <nav className="w-full h-16 bg-background border-b border-border flex items-center justify-between px-4">
-        <Link href="/" className="text-xl font-semibold text-foreground">
-          My Mind Matters
-        </Link>
-
+        <div className="flex items-center gap-16">
+          <Link href="/" className="text-xl font-semibold text-foreground h-7">
+            My Mind Matters
+          </Link>
+          {user && (
+            <div className="flex items-center h-7 gap-4">
+              <Link className=" hover:text-blue-500" href="/tasks">
+                Tasks
+              </Link>
+              <Link className=" hover:text-blue-500" href="/gamify">
+                Ideas
+              </Link>
+            </div>
+          )}
+        </div>
         {/* Button to open sidebar */}
-        <button onClick={() => setOpen(true)} className="p-2 cursor-pointer">
+        {/* <button onClick={() => setOpen(true)} className="p-2 cursor-pointer">
           ☰
-        </button>
+        </button> */}
 
         {/* User info with level */}
         <div className="flex items-center gap-3">
@@ -38,7 +48,7 @@ export default function Navbar() {
             <>
               {/* Level indicator */}
               <div className="flex items-center gap-2">
-                <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-terracotta-500 text-white font-bold text-xs">
+                <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-terracotta-100 text-white font-bold text-xs">
                   {level.icon}
                   {/* Progress ring */}
                   <svg
@@ -77,11 +87,9 @@ export default function Navbar() {
               </div>
 
               <div className="w-px h-6 bg-border hidden sm:block" />
-
-              <span className="text-sm text-muted-foreground hidden sm:inline">
-                {displayName}
-              </span>
-              <CircleUser className="text-foreground" />
+              <div className="w-8 h-8 rounded-full bg-terracotta-500 text-white font-semibold text-sm flex items-center justify-center">
+                {displayName.charAt(0).toUpperCase()}
+              </div>
             </>
           ) : (
             <Link
