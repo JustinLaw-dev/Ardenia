@@ -3,14 +3,23 @@ import { useState, useEffect } from "react";
 import MobileDashboard from "./MobileDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
+import { useTheme } from "@/contexts/ThemeContext";
 import { getPendingRequestCount } from "@/lib/friends";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Settings, LogOut, User, Moon, Sun } from "lucide-react";
 import Link from "next/link";
 
 export default function Navbar() {
   const [open, setOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const { level, currentLevelXP, xpToNextLevel, progress } = useGame();
+  const { darkMode, toggleDarkMode } = useTheme();
 
   // Fetch pending friend request count
   useEffect(() => {
@@ -104,9 +113,68 @@ export default function Navbar() {
               </div>
 
               <div className="w-px h-6 bg-border hidden sm:block" />
-              <div className="w-8 h-8 rounded-full bg-terracotta-500 text-white font-semibold text-sm flex items-center justify-center">
-                {displayName.charAt(0).toUpperCase()}
-              </div>
+
+              {/* User menu */}
+              <Popover open={menuOpen} onOpenChange={setMenuOpen}>
+                <PopoverTrigger asChild>
+                  <button className="w-8 h-8 rounded-full bg-terracotta-500 text-white font-semibold text-sm flex items-center justify-center hover:bg-terracotta-600 transition-colors cursor-pointer">
+                    {displayName.charAt(0).toUpperCase()}
+                  </button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-56 p-2">
+                  {/* User info header */}
+                  <div className="px-2 py-3 border-b border-border mb-2">
+                    <p className="font-medium text-sm text-foreground">
+                      {displayName}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {user?.email}
+                    </p>
+                  </div>
+
+                  {/* Menu items */}
+                  <div className="space-y-1">
+                    <Link
+                      href="/account"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      Account
+                    </Link>
+                    <Link
+                      href="/settings"
+                      onClick={() => setMenuOpen(false)}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors"
+                    >
+                      <Settings className="w-4 h-4" />
+                      Preferences
+                    </Link>
+                    <button
+                      onClick={toggleDarkMode}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors w-full"
+                    >
+                      {darkMode ? (
+                        <Sun className="w-4 h-4" />
+                      ) : (
+                        <Moon className="w-4 h-4" />
+                      )}
+                      {darkMode ? "Light Mode" : "Dark Mode"}
+                    </button>
+                    <div className="border-t border-border my-1" />
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        signOut();
+                      }}
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors w-full"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sign out
+                    </button>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </>
           ) : (
             <Link
