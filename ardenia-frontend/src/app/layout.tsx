@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Navbar from "../components/Navbar";
+import Sidebar from "../components/Sidebar";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { GameProvider } from "@/contexts/GameContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -35,7 +36,10 @@ export default function RootLayout({
               className={`${geistSans.variable} ${geistMono.variable} antialiased`}
             >
               <Navbar />
-              {children}
+              <Sidebar />
+              <main className="min-h-[calc(100vh-4rem)] transition-all duration-300">
+                {children}
+              </main>
             </body>
           </GameProvider>
         </ThemeProvider>

@@ -12,6 +12,7 @@ import { useAuth } from "./AuthContext";
 import { createClient } from "@/lib/supabase/client";
 import type { UserProgress, Achievement, UserAchievement } from "@/lib/types/database";
 import { getLevelProgress, type LevelDefinition } from "@/lib/constants/levels";
+import { checkAndAwardAchievements } from "@/lib/achievements";
 
 interface GameContextType {
   totalXP: number;
@@ -21,6 +22,7 @@ interface GameContextType {
   xpToNextLevel: number;
   progress: number; // 0-100 percentage
   addXP: (amount: number) => Promise<void>;
+  checkAchievements: () => Promise<Achievement[]>;
   streak: number;
   achievements: UserAchievement[];
   allAchievements: Achievement[];
@@ -50,25 +52,29 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     (lastActivityDate: string | null, currentStreak: number): number => {
       if (!lastActivityDate) return 1; // First activity
 
-      const lastActivity = new Date(lastActivityDate);
+      // Get today's date string in local timezone (YYYY-MM-DD)
       const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
 
-      // Reset time to compare dates only
-      lastActivity.setHours(0, 0, 0, 0);
-      today.setHours(0, 0, 0, 0);
-
-      const diffDays = Math.floor(
-        (today.getTime() - lastActivity.getTime()) / (1000 * 60 * 60 * 24)
-      );
-
-      if (diffDays === 0) {
-        // Same day, keep streak
+      // lastActivityDate is already in YYYY-MM-DD format
+      if (lastActivityDate === todayStr) {
+        // Same day, keep streak unchanged
         return currentStreak;
-      } else if (diffDays === 1) {
+      }
+
+      // Parse both dates as local dates for comparison
+      const [lastYear, lastMonth, lastDay] = lastActivityDate.split("-").map(Number);
+      const lastDate = new Date(lastYear, lastMonth - 1, lastDay);
+      const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+
+      const diffTime = todayDate.getTime() - lastDate.getTime();
+      const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24));
+
+      if (diffDays === 1) {
         // Consecutive day, increment streak
         return currentStreak + 1;
       } else {
-        // Streak broken, reset to 1
+        // Streak broken (more than 1 day gap), reset to 1
         return 1;
       }
     },
@@ -186,6 +192,20 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [user, userProgress, supabase, calculateStreak, fetchProgress]
   );
 
+  // Check and award achievements
+  const checkAchievements = useCallback(async (): Promise<Achievement[]> => {
+    if (!user) return [];
+
+    const { newAchievements } = await checkAndAwardAchievements(user.id);
+
+    if (newAchievements.length > 0) {
+      // Refresh to get updated achievements list and XP
+      await fetchProgress();
+    }
+
+    return newAchievements;
+  }, [user, fetchProgress]);
+
   return (
     <GameContext.Provider
       value={{
@@ -196,6 +216,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         xpToNextLevel: levelInfo.xpToNextLevel,
         progress: levelInfo.progress,
         addXP,
+        checkAchievements,
         streak,
         achievements,
         allAchievements,

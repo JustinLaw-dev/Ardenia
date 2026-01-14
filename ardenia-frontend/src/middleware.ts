@@ -12,9 +12,12 @@ export async function middleware(request: NextRequest) {
     "/auth/callback",
     "/auth/reset-password",
   ];
-  const isPublicRoute = publicRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route)
-  );
+
+  // Check if route is public (exact match for "/" or startsWith for others)
+  const pathname = request.nextUrl.pathname;
+  const isPublicRoute =
+    pathname === "/" ||
+    publicRoutes.some((route) => pathname.startsWith(route));
 
   // Check if user is authenticated (user object exists and has an id)
   const isAuthenticated = user && user.id;

@@ -5,8 +5,16 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Moon, Sun, Bell, Shield, Trash2, Loader2 } from "lucide-react";
+import { Moon, Sun, Bell, Shield, Trash2, Loader2, CalendarDays } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { getUserSettings, updateSetting, type UserSettings } from "@/lib/settings";
+import { RESET_DAYS } from "@/lib/constants/weekly-quest";
 
 interface SettingToggleProps {
   label: string;
@@ -42,6 +50,7 @@ export default function SettingsPage() {
     email_digest: false,
     show_on_leaderboard: true,
     show_streak: true,
+    weekly_reset_day: 1,
   });
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState<keyof UserSettings | null>(null);
@@ -55,6 +64,7 @@ export default function SettingsPage() {
           email_digest: data.email_digest,
           show_on_leaderboard: data.show_on_leaderboard,
           show_streak: data.show_streak,
+          weekly_reset_day: data.weekly_reset_day,
         });
         setLoading(false);
       });
@@ -81,6 +91,24 @@ export default function SettingsPage() {
     if (!result.success) {
       // Revert on error
       setSettings((prev) => ({ ...prev, [key]: !value }));
+    }
+
+    setSavingKey(null);
+  };
+
+  const handleResetDayChange = async (value: string) => {
+    if (!user) return;
+    const dayValue = parseInt(value, 10);
+
+    // Optimistic update
+    setSettings((prev) => ({ ...prev, weekly_reset_day: dayValue }));
+    setSavingKey("weekly_reset_day");
+
+    const result = await updateSetting(user.id, "weekly_reset_day", dayValue);
+
+    if (!result.success) {
+      // Revert on error
+      setSettings((prev) => ({ ...prev, weekly_reset_day: settings.weekly_reset_day }));
     }
 
     setSavingKey(null);
@@ -173,6 +201,46 @@ export default function SettingsPage() {
             loading={savingKey === "show_streak"}
             onChange={(checked) => handleToggle("show_streak", checked)}
           />
+        </div>
+      </div>
+
+      {/* Weekly Quest */}
+      <div className="bg-card border border-border rounded-lg p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <CalendarDays className="w-5 h-5" />
+          <h2 className="text-lg font-semibold text-foreground">Weekly Quest</h2>
+        </div>
+
+        <div className="py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-foreground">Week Reset Day</p>
+              <p className="text-xs text-muted-foreground">
+                Choose when your weekly quest cycle resets
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Select
+                value={String(settings.weekly_reset_day)}
+                onValueChange={handleResetDayChange}
+                disabled={savingKey === "weekly_reset_day"}
+              >
+                <SelectTrigger className="w-32">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {RESET_DAYS.map((day) => (
+                    <SelectItem key={day.value} value={String(day.value)}>
+                      {day.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {savingKey === "weekly_reset_day" && (
+                <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+              )}
+            </div>
+          </div>
         </div>
       </div>
 

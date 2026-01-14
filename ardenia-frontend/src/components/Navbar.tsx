@@ -3,14 +3,13 @@ import { useState, useEffect } from "react";
 import MobileDashboard from "./MobileDashboard";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
-import { useTheme } from "@/contexts/ThemeContext";
 import { getPendingRequestCount } from "@/lib/friends";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-import { Settings, LogOut, User, Moon, Sun } from "lucide-react";
+import { Settings, LogOut, User } from "lucide-react";
 import Link from "next/link";
 
 export default function Navbar() {
@@ -19,7 +18,6 @@ export default function Navbar() {
   const [pendingCount, setPendingCount] = useState(0);
   const { user, loading, signOut } = useAuth();
   const { level, currentLevelXP, xpToNextLevel, progress } = useGame();
-  const { darkMode, toggleDarkMode } = useTheme();
 
   // Fetch pending friend request count
   useEffect(() => {
@@ -150,24 +148,13 @@ export default function Navbar() {
                       <Settings className="w-4 h-4" />
                       Preferences
                     </Link>
-                    <button
-                      onClick={toggleDarkMode}
-                      className="flex items-center gap-2 px-2 py-2 text-sm text-foreground hover:bg-muted rounded-md transition-colors w-full"
-                    >
-                      {darkMode ? (
-                        <Sun className="w-4 h-4" />
-                      ) : (
-                        <Moon className="w-4 h-4" />
-                      )}
-                      {darkMode ? "Light Mode" : "Dark Mode"}
-                    </button>
                     <div className="border-t border-border my-1" />
                     <button
                       onClick={() => {
                         setMenuOpen(false);
                         signOut();
                       }}
-                      className="flex items-center gap-2 px-2 py-2 text-sm text-destructive hover:bg-destructive/10 rounded-md transition-colors w-full"
+                      className="flex items-center gap-2 px-2 py-2 text-sm text-destructive cursor-potihover:bg-destructive/10 rounded-md transition-colors w-full"
                     >
                       <LogOut className="w-4 h-4" />
                       Sign out

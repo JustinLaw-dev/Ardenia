@@ -45,7 +45,7 @@ export function LoginForm() {
 
         if (error) throw error;
 
-        router.push("/dashboard");
+        router.push("/");
         router.refresh();
       }
     } catch (err: any) {
@@ -56,7 +56,7 @@ export function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-terracotta-50 to-terracotta-100 px-4">
       <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
@@ -114,7 +114,7 @@ export function LoginForm() {
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-3 px-4 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-terracotta-500 text-white font-semibold py-3 px-4 rounded-lg transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? "Processing..." : isSignUp ? "Sign Up" : "Sign In"}
           </button>
@@ -127,7 +127,7 @@ export function LoginForm() {
               setIsSignUp(!isSignUp);
               setError("");
             }}
-            className="text-indigo-600 hover:text-indigo-700 font-medium text-sm"
+            className="text-terracotta-400 font-medium text-sm mb-2 underline cursor-pointer"
           >
             {isSignUp
               ? "Already have an account? Sign in"
@@ -135,17 +135,20 @@ export function LoginForm() {
           </button>
         </div>
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center">
           <a
             href="/reset-password"
-            className="text-sm text-indigo-600 hover:text-indigo-700"
+            className="text-sm text-muted-foreground hover:text-indigo-700"
           >
             Forgot password?
           </a>
         </div>
         <div className="mt-6 pt-6 border-t border-gray-200">
           <p className="text-xs text-gray-500 text-center">
-            By continuing, you agree to our Terms of Service and Privacy Policy
+            By continuing, you agree to our{" "}
+            <span className="underline">
+              Terms of Service and Privacy Policy
+            </span>
           </p>
         </div>
       </div>

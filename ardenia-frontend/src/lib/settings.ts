@@ -6,6 +6,7 @@ export interface UserSettings {
   email_digest: boolean;
   show_on_leaderboard: boolean;
   show_streak: boolean;
+  weekly_reset_day: number; // 0-6, Sunday-Saturday
 }
 
 const defaultSettings: UserSettings = {
@@ -14,6 +15,7 @@ const defaultSettings: UserSettings = {
   email_digest: false,
   show_on_leaderboard: true,
   show_streak: true,
+  weekly_reset_day: 1, // Monday
 };
 
 export async function getUserSettings(userId: string): Promise<UserSettings> {
@@ -36,6 +38,7 @@ export async function getUserSettings(userId: string): Promise<UserSettings> {
     email_digest: data.email_digest ?? defaultSettings.email_digest,
     show_on_leaderboard: data.show_on_leaderboard ?? defaultSettings.show_on_leaderboard,
     show_streak: data.show_streak ?? defaultSettings.show_streak,
+    weekly_reset_day: data.weekly_reset_day ?? defaultSettings.weekly_reset_day,
   };
 }
 
@@ -67,7 +70,7 @@ export async function saveUserSettings(
 export async function updateSetting(
   userId: string,
   key: keyof UserSettings,
-  value: boolean
+  value: boolean | number
 ): Promise<{ success: boolean; error?: string }> {
-  return saveUserSettings(userId, { [key]: value });
+  return saveUserSettings(userId, { [key]: value } as Partial<UserSettings>);
 }
