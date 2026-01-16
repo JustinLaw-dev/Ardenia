@@ -234,6 +234,7 @@ export default function TasksPage() {
     });
     if (result.success && result.task) {
       setTasks((prev) => [result.task!, ...prev]);
+      await addXP(1);
     }
   };
 
@@ -253,6 +254,7 @@ export default function TasksPage() {
 
     if (result.success && result.task) {
       setTasks((prev) => [result.task!, ...prev]);
+      await addXP(1);
       // Clear the row
       setNewTaskTitle("");
       setNewTaskDescription("");
@@ -363,7 +365,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
+    <div className="max-w-5xl mx-auto py-8 px-6">
       {/* Achievement Unlocked Notification */}
       {unlockedAchievement && (
         <div className="fixed top-20 right-4 z-50 animate-in slide-in-from-right fade-in duration-300">

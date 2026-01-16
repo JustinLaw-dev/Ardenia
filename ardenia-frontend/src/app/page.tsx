@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useGame } from "@/contexts/GameContext";
 import Link from "next/link";
@@ -18,10 +18,16 @@ import {
   TrendingUp,
   Sparkles,
   ArrowRight,
+  Zap,
+  Calendar,
+  CheckCircle2,
+  Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getCompletedTasks } from "@/lib/tasks";
+import type { Task } from "@/lib/types/database";
 
-interface Task {
+interface LocalTask {
   id: string;
   title: string;
   xp: number;
@@ -222,19 +228,79 @@ function LandingPage() {
   );
 }
 
+// Stat card component for analytics
+function StatCard({
+  icon,
+  label,
+  value,
+  subtext,
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string | number;
+  subtext?: string;
+}) {
+  return (
+    <div className="bg-card border border-border rounded-xl p-4 flex items-center gap-4">
+      <div className="w-10 h-10 rounded-full bg-terracotta-100 flex items-center justify-center text-terracotta-600">
+        {icon}
+      </div>
+      <div>
+        <p className="text-sm text-muted-foreground">{label}</p>
+        <p className="text-xl font-bold text-foreground">{value}</p>
+        {subtext && <p className="text-xs text-muted-foreground">{subtext}</p>}
+      </div>
+    </div>
+  );
+}
+
 // Dashboard for logged-in users
 function Dashboard() {
-  const { level, nextLevel, currentLevelXP, xpToNextLevel, progress, addXP } =
+  const { user } = useAuth();
+  const { level, nextLevel, currentLevelXP, xpToNextLevel, progress, addXP, streak, totalXP } =
     useGame();
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<LocalTask[]>([]);
+  const [completedTasks, setCompletedTasks] = useState<Task[]>([]);
   const [showReward, setShowReward] = useState(false);
   const [lastEarnedXP, setLastEarnedXP] = useState(0);
   const [onboardingStep, setOnboardingStep] = useState<
     "input" | "task" | "complete"
   >("input");
 
+  // Fetch completed tasks for analytics
+  useEffect(() => {
+    if (user) {
+      getCompletedTasks(user.id).then(setCompletedTasks);
+    }
+  }, [user]);
+
+  // Calculate analytics
+  const today = new Date();
+  const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+  const startOfWeek = new Date(startOfToday);
+  startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+  const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+  const tasksCompletedToday = completedTasks.filter((t) => {
+    if (!t.completed_at) return false;
+    return new Date(t.completed_at) >= startOfToday;
+  });
+
+  const tasksCompletedThisWeek = completedTasks.filter((t) => {
+    if (!t.completed_at) return false;
+    return new Date(t.completed_at) >= startOfWeek;
+  });
+
+  const tasksCompletedThisMonth = completedTasks.filter((t) => {
+    if (!t.completed_at) return false;
+    return new Date(t.completed_at) >= startOfMonth;
+  });
+
+  const xpEarnedToday = tasksCompletedToday.reduce((sum, t) => sum + t.xp, 0);
+  const xpEarnedThisWeek = tasksCompletedThisWeek.reduce((sum, t) => sum + t.xp, 0);
+
   const handleTaskCreate = useCallback((taskTitle: string) => {
-    const newTask: Task = {
+    const newTask: LocalTask = {
       id: crypto.randomUUID(),
       title: taskTitle,
       xp: XP_PER_TASK,
@@ -268,37 +334,125 @@ function Dashboard() {
   }, []);
 
   return (
-    <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center font-sans">
+    <div className="min-h-[calc(100vh-4rem)] font-sans">
       <RewardAnimation
         xp={lastEarnedXP}
         show={showReward}
         onComplete={handleRewardComplete}
       />
 
-      <main className="flex w-full max-w-2xl flex-col items-center justify-center py-8 px-6">
-        {/* XP Progress - shows after first task */}
-        {tasks.length > 0 && (
-          <div className="w-full mb-8 animate-in fade-in slide-in-from-top duration-500">
-            <FeatureTooltip
-              title="Your Progress"
-              description="Complete tasks to earn XP and level up!"
-              icon="📈"
-              position="bottom"
-              showOnMount={onboardingStep === "task"}
-            >
-              <XPProgress
-                currentXP={currentLevelXP}
-                level={level}
-                nextLevel={nextLevel}
-                xpToNextLevel={xpToNextLevel}
-                progress={progress}
-                className="w-full"
-              />
-            </FeatureTooltip>
-          </div>
-        )}
+      <main className="w-full max-w-5xl mx-auto py-8 px-6">
+        {/* Analytics Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-foreground mb-4">Your Progress</h2>
 
-        {/* Hero Section */}
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <StatCard
+              icon={<Zap className="w-5 h-5" />}
+              label="XP Today"
+              value={`+${xpEarnedToday}`}
+              subtext={`${tasksCompletedToday.length} tasks`}
+            />
+            <StatCard
+              icon={<Calendar className="w-5 h-5" />}
+              label="XP This Week"
+              value={`+${xpEarnedThisWeek}`}
+              subtext={`${tasksCompletedThisWeek.length} tasks`}
+            />
+            <StatCard
+              icon={<Flame className="w-5 h-5" />}
+              label="Current Streak"
+              value={`${streak} day${streak !== 1 ? "s" : ""}`}
+              subtext="Keep it going!"
+            />
+            <StatCard
+              icon={<CheckCircle2 className="w-5 h-5" />}
+              label="Tasks Today"
+              value={tasksCompletedToday.length}
+              subtext={`${xpEarnedToday} XP earned`}
+            />
+          </div>
+
+          {/* Level Progress */}
+          <div className="bg-card border border-border rounded-xl p-4 mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">{level.icon}</span>
+                <div>
+                  <p className="font-semibold text-foreground">{level.name}</p>
+                  <p className="text-sm text-muted-foreground">Level {level.level}</p>
+                </div>
+              </div>
+              {nextLevel && (
+                <div className="text-right">
+                  <p className="text-sm text-muted-foreground">Next: {nextLevel.name}</p>
+                  <p className="text-sm text-terracotta-500 font-medium">{xpToNextLevel} XP to go</p>
+                </div>
+              )}
+            </div>
+            <div className="w-full bg-muted rounded-full h-3">
+              <div
+                className="bg-terracotta-500 h-3 rounded-full transition-all duration-500"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+            <p className="text-xs text-muted-foreground mt-2 text-center">
+              {totalXP} total XP • {currentLevelXP} / {currentLevelXP + xpToNextLevel} XP in current level
+            </p>
+          </div>
+
+          {/* Recent Completed Tasks This Month */}
+          {tasksCompletedThisMonth.length > 0 && (
+            <div className="bg-card border border-border rounded-xl p-4">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-foreground flex items-center gap-2">
+                  <Target className="w-4 h-4 text-terracotta-500" />
+                  Recent Completions This Month
+                </h3>
+                <span className="text-sm text-muted-foreground">
+                  {tasksCompletedThisMonth.length} tasks
+                </span>
+              </div>
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {tasksCompletedThisMonth.slice(0, 10).map((task) => (
+                  <div
+                    key={task.id}
+                    className="flex items-center justify-between py-2 px-3 bg-muted/50 rounded-lg"
+                  >
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-sm text-foreground truncate max-w-[200px] md:max-w-[400px]">
+                        {task.title}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs text-terracotta-500 font-medium">+{task.xp} XP</span>
+                      <span className="text-xs text-muted-foreground">
+                        {task.completed_at
+                          ? new Date(task.completed_at).toLocaleDateString(undefined, {
+                              month: "short",
+                              day: "numeric",
+                            })
+                          : ""}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              {tasksCompletedThisMonth.length > 10 && (
+                <Link
+                  href="/tasks"
+                  className="block text-center text-sm text-terracotta-500 hover:text-terracotta-600 mt-3"
+                >
+                  View all {tasksCompletedThisMonth.length} completed tasks →
+                </Link>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Quick Add Section */}
         <div className="flex flex-col items-center gap-6 text-center w-full">
           <p className="text-xl text-muted-foreground max-w-md">
             Getting things done doesn't have to be daunting.
